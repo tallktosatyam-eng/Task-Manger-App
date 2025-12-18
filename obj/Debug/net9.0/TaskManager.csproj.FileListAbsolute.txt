@@ -281,3 +281,4 @@ C:\Users\Satyam.Jaiswal\Desktop\TaskManager\TaskManager\obj\Debug\net9.0\compres
 C:\Users\Satyam.Jaiswal\Desktop\TaskManager\TaskManager\obj\Debug\net9.0\compressed\yfc7ypekbg-mlv21k5csn.gz
 C:\Users\Satyam.Jaiswal\Desktop\TaskManager\TaskManager\obj\Debug\net9.0\compressed\v60kpk2lv8-u42j7jwx2x.gz
 C:\Users\Satyam.Jaiswal\Desktop\TaskManager\TaskManager\obj\Debug\net9.0\compressed\6f7e06aedn-u42j7jwx2x.gz
+C:\Users\Satyam.Jaiswal\Desktop\TaskManager\TaskManager\obj\Debug\net9.0\TaskManager.sourcelink.json
