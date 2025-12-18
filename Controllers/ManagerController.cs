@@ -16,9 +16,6 @@ namespace TaskManager.Controllers
             _db = db;
         }
 
-        // ======================
-        // MANAGER DASHBOARD
-        // ======================
         public IActionResult Dashboard()
         {
             var tasks = _db.TaskItems
@@ -32,8 +29,11 @@ namespace TaskManager.Controllers
             ViewBag.Overdue = tasks.Count(t =>
                 t.Deadline < DateTime.UtcNow && t.Status != "Completed");
 
+            ViewBag.Users = _db.Users.ToList(); // ADDed THIS
+
             return View(tasks);
         }
+
 
         // ======================
         // USER PERFORMANCE
@@ -136,6 +136,51 @@ namespace TaskManager.Controllers
 
             return View(tasks.ToList());
         }
+
+        [HttpGet]
+        public IActionResult UserTaskStats(int userId)
+        {
+            var now = DateTime.UtcNow;
+
+            var completed = _db.TaskItems
+                .Count(t => t.AssignedToUserId == userId && t.Status == "Completed");
+
+            var pending = _db.TaskItems
+                .Count(t => t.AssignedToUserId == userId && t.Status != "Completed");
+
+            var overdue = _db.TaskItems
+                .Count(t => t.AssignedToUserId == userId
+                            && t.Status != "Completed"
+                            && t.Deadline < now);
+
+            return Json(new
+            {
+                completed,
+                pending,
+                overdue
+            });
+        }
+
+        [HttpGet]
+        public IActionResult MonthlyCompletionTrend(int year)
+        {
+            var data = _db.TaskItems
+                .Where(t => t.Status == "Completed"
+                            && t.Deadline.HasValue
+                            && t.Deadline.Value.Year == year)
+                .GroupBy(t => t.Deadline.Value.Month)
+                .Select(g => new
+                {
+                    Month = g.Key,
+                    Count = g.Count()
+                })
+                .OrderBy(x => x.Month)
+                .ToList();
+
+            return Json(data);
+        }
+
+
 
     }
 }

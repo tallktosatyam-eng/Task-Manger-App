@@ -1,10 +1,12 @@
 @model TaskManager.Models.Project
+@using System.Security.Claims;
 
 @{
     ViewData["Title"] = "Dashboard";
 
     var upcoming = ViewBag.Upcoming as List<TaskManager.Models.TaskItem>;
     var count = 1;
+    int currentUserID = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
 }
 
 <h2 class="text-center text-secondary mb-4">
@@ -63,7 +65,7 @@
 </h4>
 <h5 class="text-center">Tasks</h5>
 
-@if (upcoming != null && upcoming.Count > 0)
+@if (upcoming != null && upcoming.Count > 0) 
 {
     <div class="table-responsive">
         <table id="myTable" class="table table-bordered table-hover align-middle table-striped modern-table">
@@ -132,6 +134,7 @@
         </table>
     </div>
 }
+
 else
 {
     <div class="alert alert-warning mt-3">

@@ -25,29 +25,29 @@
     </p>
 }
 
-<table id="myTable" class="table table-bordered table-hover align-middle table-striped modern-table">
+<table id="myTable" class="table table-bordered table-hover align-middle table-striped modern-table mt-4">
     <thead class="table-dark">
         <tr>
-            <th class="text-center">Sr.No</th>
-            <th class="text-center">Title</th>
-            <th class="text-center">Project</th>
+            <th class="text-center border border-2">Sr.No</th>
+            <th class="text-center border border-2">Title</th>
+            <th class="text-center border border-2">Project</th>
             @{
                 if (User.IsInRole("Admin") || User.IsInRole("Manager"))
                 {
-                    <th class="text-center">Assigned To</th>
+                    <th class="text-center border border-2">Assigned To</th>
                 }
             }
             @* <th class="text-center">Description</th> *@
-            <th class="text-center">Deadline</th>
+            <th class="text-center border border-2">Deadline</th>
 
             <!-- Status column with reduced width -->
-            <th class="text-center status-col">Status</th>
+            <th class="text-center status-col border border-2">Status</th>
 
-            <th class="text-center" style="width:200px;">Progress</th>
+            <th class="text-center border border-2" style="width:220px;">Progress</th>
 
             @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
             {
-                <th class="text-center">Actions</th>
+                <th class="text-center border border-2">Actions</th>
 
             }
         </tr>
@@ -104,7 +104,7 @@
                 <td class="text-center">
                     @if (canEdit)
                     {
-                        <select class="form-select status-dropdown me-1" data-id="@t.Id ">
+                        <select class="form-select status-dropdown me-1" data-id="@t.Id">
                             <option value="Not Started" selected="@(t.Status == "Not Started")">Not Started </option>
                             <option value="In Progress" selected="@(t.Status == "In Progress")">In Progress </option>
                             <option value="Completed" selected="@(t.Status == "Completed")">Completed </option>
@@ -134,12 +134,13 @@
                 @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
                 {
                     <td class="text-center">
-                        <a class="btn btn-sm btn-outline-danger" href="/Tasks/Delete/@t.Id">
-                            <i class="bi bi-trash3"></i>
-                        </a>
                         <a class="btn btn-sm btn-outline-secondary" href="/Tasks/Edit/@t.Id">
                             <i class="bi bi-pencil-square"></i>
                         </a>
+                        <a class="btn btn-sm btn-outline-danger" href="/Tasks/Delete/@t.Id">
+                            <i class="bi bi-trash3"></i>
+                        </a>
+
                     </td>
                 }
             </tr>
@@ -151,20 +152,20 @@
 
 @section Scripts {
     <script>
-    document.querySelectorAll(".task-row").forEach(row => {
-        row.addEventListener("dblclick", function (e) {
+        document.querySelectorAll(".task-row").forEach(row => {
+            row.addEventListener("dblclick", function (e) {
 
-            // Prevent redirect when interacting with controls
-            if (
-                e.target.tagName === "SELECT" ||
-                e.target.tagName === "INPUT" ||
-                e.target.tagName === "BUTTON" ||
-                e.target.closest("a")
-            ) return;
+                // Prevent redirect when interacting with controls
+                if (
+                    e.target.tagName === "SELECT" ||
+                    e.target.tagName === "INPUT" ||
+                    e.target.tagName === "BUTTON" ||
+                    e.target.closest("a")
+                ) return;
 
-            window.location.href = this.dataset.href;
+                window.location.href = this.dataset.href;
+            });
         });
-    });
 
         $(".status-dropdown").change(function () {
             const id = $(this).data("id");
@@ -193,16 +194,16 @@
         });
 
         function showToast(message, isError = false) {
-            let bg = isError ? "bg-danger" : "bg-success";  
+            let bg = isError ? "bg-danger" : "bg-success";
 
             let toastHtml = `
-                                    <div class="toast align-items-center text-white ${bg} border-0 show position-fixed bottom-0 end-0 m-3"
-                                         role="alert" style="z-index:9999;">
-                                        <div class="d-flex">
-                                            <div class="toast-body">${message}</div>
-                                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-                                        </div>
-                                    </div>`;
+                                        <div class="toast align-items-center text-white ${bg} border-0 show position-fixed bottom-0 end-0 m-3"
+                                             role="alert" style="z-index:9999;">
+                                            <div class="d-flex">
+                                                <div class="toast-body">${message}</div>
+                                                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                                            </div>
+                                        </div>`;
 
             $("body").append(toastHtml);
 
@@ -279,7 +280,7 @@
 
     </script>
 
-    
+
 }
 
 <style>

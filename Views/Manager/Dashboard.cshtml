@@ -11,29 +11,29 @@
 
 <div class="row text-center mb-4">
 
-    <div class="col-md-3">
-        <div class="card shadow p-3">
+    <div class="col-md-3 ">
+        <div class="card shadow p-3 border border-dark">
             <h6>Total Tasks</h6>
             <h2>@ViewBag.TotalTasks</h2>
         </div>
     </div>
 
     <div class="col-md-3">
-        <div class="card shadow p-3">
+        <div class="card shadow p-3 border border-success">
             <h6>Completed</h6>
             <h2 class="text-success">@ViewBag.Completed</h2>
         </div>
     </div>
 
     <div class="col-md-3">
-        <div class="card shadow p-3">
+        <div class="card shadow p-3 border border-warning">
             <h6>Pending</h6>
             <h2 class="text-warning">@ViewBag.Pending</h2>
         </div>
     </div>
 
     <div class="col-md-3">
-        <div class="card shadow p-3">
+        <div class="card shadow p-3 border border-danger">
             <h6>Overdue</h6>
             <h2 class="text-danger">@ViewBag.Overdue</h2>
         </div>
@@ -43,7 +43,7 @@
 
 <hr />
 
-<h4 class="mt-4 mb-3">
+<h4 class="mt-4 mb-3 text-secondary">
     <i class="bi bi-list-task me-2"></i> All Tasks Overview
 </h4>
 
@@ -116,8 +116,43 @@
 
             count++;
         }
+        
     </tbody>
 </table>
+
+<hr />
+
+<h4 class="mb-3 text-secondary">
+    <i class="bi bi-bar-chart-fill me-2"></i> User Task Statistics
+</h4>
+
+<div class="row mb-4 align-items-center">
+    <div class="col-md-2 fw-bold">
+        Select User
+    </div>
+
+    <div class="col-md-4">
+        <select id="userSelect" class="form-select">
+            <option value="">Select User</option>
+            @foreach (var u in ViewBag.Users)
+            {
+               <option value="@u.Id">@u.Name</option>   
+            }
+        </select>
+    </div>
+</div>
+
+
+<div class="row">
+    <div class="col-md-8">
+        <canvas id="userTaskChart" height="120"></canvas>
+    </div>
+</div>
+
+<hr/>
+
+
+
 
 @section Scripts {
 <script>
@@ -128,5 +163,56 @@
             lengthChange: false
         });
     });
+
+    let chart;
+
+    $("#userSelect").change(function () {
+        const userId = $(this).val();
+        if (!userId) return;
+
+        $.get("/Manager/UserTaskStats", { userId }, function (data) {
+            renderChart(data);
+        });
+    });
+
+
+    function renderChart(data) {
+
+        const ctx = document.getElementById("userTaskChart").getContext("2d");
+
+        if (chart) {
+            chart.destroy();
+        }
+
+        chart = new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: ["Completed", "Pending", "Overdue"],
+                datasets: [{
+                    label: "Task Count",
+                    data: [
+                        data.completed,
+                        data.pending,
+                        data.overdue
+                    ],
+                    backgroundColor: [
+                        "#198754", // green
+                        "#ffc107", // yellow
+                        "#dc3545"  // red
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 }
+                    }
+                }
+            }
+        });
+    }
+
 </script>
 }

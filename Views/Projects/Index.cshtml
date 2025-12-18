@@ -29,7 +29,7 @@
             <th class="text-center border border-2">Start Date</th>
             <th class="text-center border border-2">End Date</th>
 
-            @if (User.IsInRole("Admin"))
+            @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
             {
                 <th class="text-center border border-2">Actions </th>
             }
@@ -63,15 +63,15 @@
                         @p.EndDate?.ToLocalTime().ToString("dd MMM yyyy")
                     </span>
                 </td>
-                @if (User.IsInRole("Admin"))
+                @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
                 {
                     <td class="text-center">
                         <div class="action-buttons">
                             <a class="btn btn-sm btn-outline-secondary me-1" href="/Projects/Edit/@p.Id">
-                                <i class="bi bi-pencil-square me-1"></i> Edit
+                                <i class="bi bi-pencil-square me-1"></i>
                             </a>
                             <a class="btn btn-sm btn-outline-danger ms-1" href="/Projects/Delete/@p.Id">
-                                <i class="bi bi-trash"></i> Delete
+                                <i class="bi bi-trash"></i> 
                             </a>
                         </div>
                     </td>
