@@ -1,0 +1,207 @@
+// using Microsoft.AspNetCore.Authorization;
+// using Microsoft.AspNetCore.Mvc;
+// using Microsoft.AspNetCore.Mvc.Rendering;
+// using Microsoft.EntityFrameworkCore;
+// using TaskManager.Data;
+// using TaskManager.Models;
+// using TaskManager.Controllers;
+// using System.Security.Claims;
+
+
+// namespace TaskManager.Controllers
+// {
+//     [Authorize]
+//     public class TasksController : Controller
+//     {
+//         private readonly ApplicationDbContext _db;
+
+//         public TasksController(ApplicationDbContext db)
+//         {
+//             _db = db;
+//         }
+
+//         public async Task<IActionResult> Index()
+//         {
+        
+//             int currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+//             IQueryable<TaskItem> tasks = _db.TaskItems
+//         .Include(t => t.Project)
+//         .Include(t => t.AssignedTo);
+
+//             if (!User.IsInRole("Admin"))
+//             {
+//                 // Show only user's tasks
+//                 tasks = tasks.Where(t => t.AssignedToUserId == currentUserId);
+//             }
+
+//             return View(tasks.ToList());
+//         }
+
+//         [Authorize(Roles = "Admin")]
+//         public IActionResult Create()
+//         {
+//             ViewBag.Projects = new SelectList(_db.Projects, "Id", "Name");
+//             ViewBag.Users = new SelectList(_db.Users, "Id", "Name");
+//             return View();
+//         }
+
+//         [HttpPost, Authorize(Roles = "Admin")]
+//         public async Task<IActionResult> Create(TaskItem model)
+//         {
+//             if (!ModelState.IsValid)
+//             {
+//                 ViewBag.Projects = new SelectList(_db.Projects, "Id", "Name");
+//                 ViewBag.Users = new SelectList(_db.Users, "Id", "Name");
+//                 return View(model);
+//             }
+
+//             // Default status and date
+//             model.CreatedAt = DateTime.UtcNow;
+//             model.Status ??= "Not Started";
+
+//             _db.TaskItems.Add(model);
+//             await _db.SaveChangesAsync();
+
+//             // Create notification when assigned
+//             if (model.AssignedToUserId.HasValue)
+//             {
+//                 _db.Notifications.Add(new Notification
+//                 {
+//                     UserId = model.AssignedToUserId.Value,
+//                     TaskItemId = model.Id,
+//                     Message = $"New task assigned: {model.Title}",
+//                     CreatedAt = DateTime.UtcNow
+//                 });
+
+//                 await _db.SaveChangesAsync();
+//             }
+
+//             TempData["Message"] = "Task created successfully!";
+//             return RedirectToAction("Index");
+//         }
+
+//         // [Authorize(Roles = "Admin")]
+//         public async Task<IActionResult> Edit(int id)
+//         {
+//             var task = await _db.TaskItems.FindAsync(id);
+//             if (task == null)
+//                 return NotFound();
+
+//             ViewBag.Projects = new SelectList(_db.Projects, "Id", "Name", task.ProjectId);
+//             ViewBag.Users = new SelectList(_db.Users, "Id", "Name", task.AssignedToUserId);
+
+//             return View(task);
+//         }
+
+//         [HttpPost, Authorize(Roles = "Admin")]
+//         public async Task<IActionResult> Edit(TaskItem model)
+//         {
+//             if (!ModelState.IsValid)
+//             {
+//                 ViewBag.Projects = new SelectList(_db.Projects, "Id", "Name", model.ProjectId);
+//                 ViewBag.Users = new SelectList(_db.Users, "Id", "Name", model.AssignedToUserId);
+//                 return View(model);
+//             }
+
+//             // Track previous assigned user
+//             var existingTask = await _db.TaskItems
+//                 .AsNoTracking()
+//                 .FirstOrDefaultAsync(t => t.Id == model.Id);
+
+//             _db.TaskItems.Update(model);
+//             await _db.SaveChangesAsync();
+
+//             // Notify only if assignment changed or status changed
+//             if (model.AssignedToUserId.HasValue)
+//             {
+//                 var assignedUser = model.AssignedToUserId.Value;
+//                 bool isAssignedChanged =
+//                     existingTask?.AssignedToUserId != model.AssignedToUserId;
+
+//                 bool isStatusChanged =
+//                     existingTask?.Status != model.Status;
+
+//                 if (isStatusChanged || isAssignedChanged)
+//                 {
+//                     _db.Notifications.Add(new Notification
+//                     {
+//                         UserId = assignedUser,
+//                         TaskItemId = model.Id,
+//                         Message = $"Task updated: {model.Title} | Status: {model.Status}",
+//                         CreatedAt = DateTime.UtcNow
+//                     });
+
+//                     await _db.SaveChangesAsync();
+//                 }
+//             }
+
+//             TempData["Message"] = "Task updated successfully!";
+//             return RedirectToAction("Index");
+//         }
+
+//         [HttpPost]
+//         public async Task<IActionResult> UpdateProgress(int id, int progress)
+//         {
+//             var task = await _db.TaskItems.FindAsync(id);
+//             if (task == null)
+//                 return NotFound();
+
+//             task.Progress = progress;
+//             await _db.SaveChangesAsync();
+
+//             TempData["Message"] = "Progress updated successfully!";
+//             return RedirectToAction("Index");
+//         }
+
+//         [HttpPost]
+//         public async Task<IActionResult> UpdateProgressAndStatus(int id, int progress, string status)
+//         {
+//             var currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+//             var task = await _db.TaskItems.FindAsync(id);
+//             if (task == null)
+//                 return NotFound();
+
+//             if (task.AssignedToUserId != currentUserId && !User.IsInRole("Admin"))
+//                 return Forbid();
+
+//             task.Progress = progress;
+//             task.Status = status;
+//             await _db.SaveChangesAsync();
+
+//             TempData["Message"] = "Task updated successfully!";
+//             return RedirectToAction("Index");
+//         }
+
+//         [HttpPost, ActionName("DeleteConfirmed")]
+//         public async Task<IActionResult> DeleteConfirmed(int id)
+//         {
+//             var task = await _db.TaskItems.FindAsync(id);
+//             if (task == null) return NotFound();
+
+//             _db.TaskItems.Remove(task);
+//             await _db.SaveChangesAsync();
+//             return RedirectToAction(nameof(Index));
+//         }
+
+//         public IActionResult Delete(int id)
+//         {
+//             var task = _db.TaskItems
+//                 .Include(t => t.Project)
+//                 .Include(t => t.AssignedTo)
+//                 .FirstOrDefault(t => t.Id == id);
+
+//             if (task == null)
+//                 return NotFound();
+
+//             return View(task);
+//         }
+
+//         [Authorize(Roles = "Admin")]
+//         public IActionResult EditProgressReport()
+//         {
+//             return View();
+//         }
+
+//     }
+// }

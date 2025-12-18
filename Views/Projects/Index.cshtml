@@ -1,0 +1,177 @@
+@model IEnumerable<TaskManager.Models.Project>
+@{
+    ViewData["Title"] = "Projects";
+    var count = 1;
+}
+
+@if(TempData["Message"] != null)
+{
+    <div class="alert alert-success">@TempData["Message"]</div>
+}
+<h2 class="text-center text-secondary">
+    <i class="bi bi-folder2-open me-2">
+        Projects
+    </i>
+</h2>
+@if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+{
+    <p><a class="btn btn-secondary" href="/Projects/Create">
+    <i class="bi bi-plus"></i>
+    Create Project
+    </a></p>
+}
+<table id="myTable" class="table table-bordered table-hover align-middle table-striped modern-table mt-4">
+    <thead class="table-dark">
+        <tr>
+            <th class="text-center border border-2">Sr.No</th>
+            <th class="text-center border border-2"> Project Name</th>
+            <th class="text-center border border-2">Descriptions </th>
+            <th class="text-center border border-2">Start Date</th>
+            <th class="text-center border border-2">End Date</th>
+
+            @if (User.IsInRole("Admin"))
+            {
+                <th class="text-center border border-2">Actions </th>
+            }
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var p in Model)
+        {
+            <tr>
+                <td class="text-center"><strong>@count</strong></td>
+
+                <td class="text-center">
+                    <span class="badge text-primary">
+                     @p.Name
+                    </span>
+                </td>
+
+                <td class="text-center">
+                    @p.Description
+                </td>
+
+                <td class="text-center">
+                    <span class="badge date-pill-start text-dark">
+                        @p.StartDate?.ToLocalTime().ToString("dd MMM yyyy")
+                    </span>
+                </td>
+
+                <td class="text-center">
+                    <span class="badge date-pill-end text-dark">
+                        @p.EndDate?.ToLocalTime().ToString("dd MMM yyyy")
+                    </span>
+                </td>
+                @if (User.IsInRole("Admin"))
+                {
+                    <td class="text-center">
+                        <div class="action-buttons">
+                            <a class="btn btn-sm btn-outline-secondary me-1" href="/Projects/Edit/@p.Id">
+                                <i class="bi bi-pencil-square me-1"></i> Edit
+                            </a>
+                            <a class="btn btn-sm btn-outline-danger ms-1" href="/Projects/Delete/@p.Id">
+                                <i class="bi bi-trash"></i> Delete
+                            </a>
+                        </div>
+                    </td>
+                }
+            </tr>
+
+            count++;
+        }
+    </tbody>
+</table>
+
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#myTable').DataTable({
+                paging: true,
+                pageLength: 10,
+                lengthMenu: [10, 25, 50, 100],
+                lengthChange: false,
+
+                pagingType: "full_numbers",
+                language: {
+                    paginate: {
+                        previous: "Previous",
+                        next: "Next"
+                    }
+                }
+            });
+        });
+    </script>
+}
+
+<style>
+    /* Set specific column widths */
+    .modern-table th:nth-child(1),
+    .modern-table td:nth-child(1) {
+        width: 70px;
+    }
+
+    .modern-table th:nth-child(2),
+    .modern-table td:nth-child(2) {
+        min-width: 180px;
+    }
+
+    .modern-table th:nth-child(3),
+    .modern-table td:nth-child(3) {
+        min-width: 250px;
+    }
+
+    .modern-table th:nth-child(4),
+    .modern-table td:nth-child(4),
+    .modern-table th:nth-child(5),
+    .modern-table td:nth-child(5) {
+        min-width: 150px;
+    }
+
+    .modern-table th:last-child,
+    .modern-table td:last-child {
+        min-width: 200px;
+    }
+
+    .action-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .btn-sm {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+
+    /** Main Modern Table **/
+    .modern-table {
+        border-radius: 12px;
+        overflow: hidden;
+        background: white;
+        box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .modern-table thead {
+        background: linear-gradient(to right, #1f4e79, #447ecb);
+        color: white;
+        font-weight: 600;
+    }
+
+    .modern-table thead th {
+        padding: 14px;
+        border: none;
+        font-size: 15px;
+    }
+
+    .modern-table tbody tr {
+        transition: 0.2s ease-in-out;
+    }
+
+    .modern-table tbody tr:hover {
+        background-color: rgba(90, 150, 250, 0.15);
+        transform: scale(1.01);
+    }
+
+</style>

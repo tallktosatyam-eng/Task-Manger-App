@@ -1,0 +1,44 @@
+@model TaskManager.Models.User
+@{
+    ViewData["Title"] = "Edit User Role";
+    var roles = ViewBag.Roles as IEnumerable<TaskManager.Models.Role>;
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5 card p-3">
+            <h2 class="text-secondary text-center mb-4">Edit User Role</h2>
+
+            @if (TempData["Message"] != null)
+            {
+                <div class="alert alert-success text-center">@TempData["Message"]</div>
+            }
+
+            <form method="post" action="/Admin/EditRole">
+                <input type="hidden" name="id" value="@Model.Id" />
+
+                <div>
+                    <p>Change Role for <strong>@Model.Name</strong></p>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Select Role</label>
+                    <select name="newRoleId" class="form-select">
+                    @foreach(var r in roles)
+                        {
+                            <option value="@r.Id">
+                                @r.RoleName
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <center>
+                <button type="submit" class="btn btn-primary w-20">Update Role</button>
+
+                <a href="/Admin/Users" class="btn btn-secondary w-20 ">Cancel</a>
+                </center>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,126 @@
+@model TaskManager.Models.TaskItem;
+@using System.Security.Claims;
+
+@{
+    ViewData["Title"] = "Edit Task";
+
+    var projects = ViewBag.Projects as Microsoft.AspNetCore.Mvc.Rendering.SelectList;
+    var users = ViewBag.Users as Microsoft.AspNetCore.Mvc.Rendering.SelectList;
+    int currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+}
+
+<h2 class="text-center text-secondary">Edit Task</h2>
+
+<div class="card p-3">
+@if (User.IsInRole("Admin"))
+{
+    <!-- ADMIN CAN EDIT EVERYTHING -->
+    <form asp-action="Edit" method="post">
+        <input type="hidden" asp-for="Id" />
+
+        <div class="mb-3">
+            <label>Title</label>
+            <input asp-for="Title" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label>Project</label>
+            <select asp-for="ProjectId" asp-items="projects" class="form-select"></select>
+        </div>
+
+        <div class="mb-3">
+            <label>Assign To</label>
+            <select asp-for="AssignedToUserId" asp-items="users" class="form-select"></select>
+        </div>
+
+        <div class="mb-3">
+            <label>Deadline</label>
+            <input asp-for="Deadline" type="date" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label>Status</label>
+            <select asp-for="Status" class="form-select">
+                <option>Not Started</option>
+                <option>In Progress</option>
+                <option>Completed</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label>Priority</label>
+            <select asp-for="Priority" class="form-select">
+                <option>Low</option>
+                <option>Medium</option>
+                <option>High</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label>Description</label>
+            <textarea asp-for="Description" class="form-control"></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label>Progress (%)</label>
+            <input asp-for="Progress" type="number" min="0" max="100" class="form-control" />
+        </div>
+        <center>
+        <button class="btn btn-secondary me-2" >Save Changes</button>
+        <a href="/Tasks" class="btn btn-danger ">
+            Cancel</a>
+        </center>
+    </form>
+}
+else if (Model.AssignedToUserId == currentUserId)
+{
+    <div class="alert alert-info mb-3">
+        You are assigned to this task. You can update Progress and Status.
+    </div>
+
+    <form asp-action="UpdateProgressAndStatus" method="post">
+        <input type="hidden" name="id" value="@Model.Id" />
+
+        <div class="mb-3">
+            <label>Status</label>
+            <select name="status" class="form-select">
+                <option value="Not Started" >
+                    Not Started
+                </option>
+
+                <option value="In Progress">
+                    In Progress
+                </option>
+
+                <option value="Completed">
+                    Completed
+                </option>
+            </select>
+
+        </div>
+
+        <div class="mb-3">
+            <label>Progress (%)</label>
+            <input name="progress" type="number" min="0" max="100" value="@Model.Progress" class="form-control" />
+        </div>
+        <center>
+        <button class="btn btn-secondary">Update</button>
+        <a href="/Tasks" class="btn btn-danger ">
+            Cancel</a>
+        </center>
+        
+    </form>
+
+    
+}
+else
+{
+    <div class="alert alert-danger">
+        You do not have permission to edit this task.
+        Contact Administration
+    </div>
+    <center>
+    <a href="/Tasks" class="btn btn-secondary" style="width:100px;">Back</a>
+    </center>
+}
+</div>

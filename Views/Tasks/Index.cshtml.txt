@@ -1,0 +1,365 @@
+@model IEnumerable<TaskManager.Models.TaskItem>
+@using System.Security.Claims;
+
+@{
+    ViewData["Title"] = "Tasks";
+    var count = 1;
+    int currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+}
+
+<h2 class="text-center text-secondary">
+    <i class="bi bi-card-checklist me-2"></i> Tasks
+</h2>
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success">@TempData["Message"]</div>
+}
+
+@if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+{
+    <p>
+        <a class="btn btn-secondary" href="/Tasks/Create">
+            <i class="bi bi-plus"></i> Create Task
+        </a>
+    </p>
+}
+
+<table id="myTable" class="table table-bordered table-hover align-middle table-striped modern-table">
+    <thead class="table-dark">
+        <tr>
+            @* <th class="text-center"><i class="bi bi-star"></i> Sr.No</th> *@
+            <th class="text-center">Title</th>
+            <th class="text-center">Project</th>
+            @{
+                if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+                {
+                    <th class="text-center">Assigned To</th> 
+                }
+            }
+            <th class="text-center">Description</th>
+            <th class="text-center">Deadline</th>
+
+            <!-- Status column with reduced width -->
+            <th class="text-center status-col">Status</th>
+
+            <th class="text-center">Progress</th>
+
+            @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+            {
+                <th class="text-center">Actions</th>
+                
+            }
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var t in Model)
+        {
+            var overdue = t.Deadline.HasValue && t.Deadline.Value < DateTime.UtcNow && t.Status != "Completed";
+            bool canEdit = User.IsInRole("Admin") || 
+                           t.AssignedToUserId == currentUserId || 
+                           User.IsInRole("Manager");
+
+            <tr class="@(overdue ? "overdue-row" : "")">
+                @* <td class="text-center"><strong>@count</strong></td> *@
+
+                <td class="text-center">@t.Title</td>
+
+                <td class="text-center">
+                    <span class="badge bg-primary-subtle text-primary px-2">
+                        <i class="bi bi-folder2-open me-1"></i>
+                        @(t.Project?.Name ?? "No Project")
+                    </span>
+                </td>
+
+                @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+                {
+                <td class="text-center">
+                    <span class="badge bg-secondary px-2">
+                        @(t.AssignedTo?.Name ?? "Not Assigned")
+                    </span>
+                </td> 
+                }
+
+                <td class="text-center">@t.Description</td>
+                
+
+                <td class="text-center">
+                    @if (t.Deadline.HasValue)
+                    {
+                        <span class="badge deadline-pill text-secondary">
+                            @t.Deadline.Value.ToLocalTime().ToString("dd MMM yyyy")
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-light text-secondary">No Deadline</span>
+                    }
+                </td>
+
+                <!-- STATUS COLUMN -->
+                <td class="text-center">
+                    @if (canEdit)
+                    {
+                        <select class="form-select status-dropdown me-1" data-id="@t.Id ">
+                            <option value="Not Started" selected="@(t.Status == "Not Started")">Not Started </option>
+                            <option value="In Progress" selected="@(t.Status == "In Progress")">In Progress </option>
+                            <option value="Completed" selected="@(t.Status == "Completed")">Completed </option>
+                        </select>
+                    }
+                    else
+                    {
+                        <span class="badge bg-info">@t.Status</span>
+                    }
+                </td>
+
+                <!-- PROGRESS COLUMN -->
+                <td class="text-center">
+                    @if (canEdit)
+                    {
+                        <input type="range" class="form-range progress-slider" data-id="@t.Id" min="0" max="100"
+                            value="@t.Progress" style="width:120px" />
+
+                        <span class="fw-bold progress-label-@t.Id">@t.Progress %</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning text-dark">@t.Progress %</span>
+                    }
+                </td>
+
+                @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+                {
+                    <td class="text-center">
+                            <a class="btn btn-sm btn-outline-danger" href="/Tasks/Delete/@t.Id">
+                                <i class="bi bi-trash3"></i>
+                            </a>
+                            <a class="btn btn-sm btn-outline-secondary" href="/Tasks/Edit/@t.Id">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                    </td>
+                }
+            </tr>
+
+            count++;
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    <script>
+        $(".status-dropdown").change(function () {
+            const id = $(this).data("id");
+            const newStatus = $(this).val();
+
+            $.post("/Tasks/UpdateStatus", { id: id, status: newStatus }, function (res) {
+                if (res.success) showToast("Status updated!");
+                else showToast(res.message, true);
+            });
+        });
+
+        $(".progress-slider").on("input", function () {
+            let value = $(this).val();
+            const id = $(this).data("id");
+            $(".progress-label-" + id).text(value);
+        });
+
+        $(".progress-slider").on("change", function () {
+            const id = $(this).data("id");
+            const progress = $(this).val();
+
+            $.post("/Tasks/UpdateProgress", { id: id, progress: progress }, function (res) {
+                if (res.success) showToast("Progress updated!");
+                else showToast(res.message, true);
+            });
+        });
+
+        function showToast(message, isError = false) {
+            let bg = isError ? "bg-danger" : "bg-success";
+
+            let toastHtml = `
+                                <div class="toast align-items-center text-white ${bg} border-0 show position-fixed bottom-0 end-0 m-3"
+                                     role="alert" style="z-index:9999;">
+                                    <div class="d-flex">
+                                        <div class="toast-body">${message}</div>
+                                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                                    </div>
+                                </div>`;
+
+            $("body").append(toastHtml);
+
+            setTimeout(() => { $(".toast").remove(); }, 2500);
+        }
+
+        $(document).ready(function () {
+            $('#myTable').DataTable({
+                paging: true,
+                pageLength: 10,
+                lengthChange: false,
+                pagingType: "full_numbers"
+            });
+        });
+
+        function applyStatusColor(element) {
+            let value = $(element).val();
+
+            $(element).removeClass("status-completed status-progress status-notstarted");
+
+            if (value === "Completed") {
+                $(element).addClass("status-completed");
+            }
+            else if (value === "In Progress") {
+                $(element).addClass("status-progress");
+            }
+            else if (value === "Not Started") {
+                $(element).addClass("status-notstarted");
+            }
+        }
+
+        // Apply color on load
+        $(".status-dropdown").each(function () {
+            applyStatusColor(this);
+        });
+
+        // Apply color when user changes
+        $(".status-dropdown").on("change", function () {
+            applyStatusColor(this);
+        });
+
+        function applyProgressColor(element) {
+        let value=parseInt($(element).val());
+
+        // Remove old classes
+        $(element).removeClass("progress-red progress-info progress-yellow progress-green");
+
+        if (value < 30) {
+            $(element).addClass("progress-red");
+        }
+
+        else if (value >=30 && value < 70) {
+            $(element).addClass("progress-info");
+        }
+
+        else if (value >=70 && value < 90) {
+            $(element).addClass("progress-yellow");
+        }
+
+        else if (value >=90) {
+            $(element).addClass("progress-green");
+        }
+    }
+
+    // Apply on load
+    $(".progress-slider").each(function () {
+            applyProgressColor(this);
+        });
+
+    // Apply on change + while dragging
+    $(".progress-slider").on("input change", function () {
+            applyProgressColor(this);
+        });
+
+    </script>
+}
+
+<style>
+    .modern-table {
+        width: 100%;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    /* 🔥 Reduce Status Column Width */
+    .status-col {
+        width: 110px !important;
+        white-space: nowrap;
+    }
+
+    /* 🔥 Shrink Status Dropdown */
+    .status-dropdown {
+        width: 100px !important;
+        padding: 3px 7px !important;
+        /* Reduce padding */
+        height: 28px !important;
+        /* Reduce height */
+        line-height: 20px !important;
+        /* Align text properly */
+        font-size: 13px !important;
+        /* Smaller text */
+        border-radius: 6px !important;
+        /* Smooth corners */
+    }
+
+    .status-completed {
+        background-color: #198754 !important;
+        /* Bootstrap green */
+        color: white !important;
+    }
+
+    .status-progress {
+        background-color: #ffc107 !important;
+        /* Bootstrap yellow */
+        color: black !important;
+    }
+
+    .status-notstarted {
+        background-color: #dc3545 !important;
+        /* Bootstrap red */
+        color: white !important;
+    }
+
+
+    .deadline-pill {
+        background: #fff4e6;
+        border: 1px solid #ffb84d;
+        padding: 6px 14px;
+        border-radius: 20px;
+    }
+
+    .overdue-row {
+        background-color: rgba(255, 0, 0, 0.10) !important;
+    }
+
+    /* Base style for all sliders */
+    .progress-slider {
+        height: 6px !important;
+        border: 1px solid black !important;
+        /* Black border */
+        border-radius: 5px !important;
+        appearance: none;
+    }
+
+    /* Slider thumb */
+    .progress-slider::-webkit-slider-thumb {
+        appearance: none;
+        height: 14px;
+        width: 14px;
+        border-radius: 50%;
+        background: #0d6efd;
+        /* Blue default */
+        cursor: pointer;
+    }
+
+    /* Track colors (custom classes added dynamically) */
+    .progress-red::-webkit-slider-runnable-track {
+        background: #dc3545 !important;
+    }
+
+    .progress-info::-webkit-slider-runnable-track {
+        background: #0dcaf0 !important;
+    }
+
+    .progress-yellow::-webkit-slider-runnable-track {
+        background: #ffc107 !important;
+    }
+
+    .progress-green::-webkit-slider-runnable-track {
+        background: #198754 !important;
+    }
+
+
+    
+</style>

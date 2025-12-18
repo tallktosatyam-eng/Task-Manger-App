@@ -1,0 +1,31 @@
+@{
+    ViewData["Title"] = "Create User";
+    var roles = ViewBag.Roles as IEnumerable<TaskManager.Models.Role>;
+}
+<h2 class="text-center text-secondary">
+<i class="bi bi-person-plus-fill me-2"></i>
+Create User
+</h2>
+<form method="post" class="card p-3">
+    <div class="mb-3"><label class="form-label text-secondary fw-semibold small">Name</label><input name="name" class="form-control" required /></div>
+    <div class="mb-3"><label class="form-label text-secondary fw-semibold small">Email</label><input name="email" type="email" class="form-control" required autocomplete="off"/></div>
+    <div class="mb-3"><label class="form-label text-secondary fw-semibold small">Password</label><input name="password" type="password" class="form-control" required autocomplete="new-password"/></div>
+    <div class="mb-3">
+        <label class="form-label text-secondary fw-semibold small">Role</label>
+        <select name="roleId" class="form-select">
+            @if (roles != null) 
+            { 
+                @foreach(var r in roles) 
+                { 
+                    <option value="@r.Id">
+                        @r.RoleName
+                    </option> 
+                } 
+            }
+        </select>
+    </div>
+    <center>
+    <button class="btn btn-secondary">Create</button>
+    <a href="/Admin/Users" class="btn btn-danger ms-2" style="width:100px">Cancel</a>
+    </center>
+</form>

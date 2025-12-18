@@ -1,0 +1,50 @@
+@model TaskManager.Models.TaskItem
+@{
+    var projects = ViewBag.Projects as Microsoft.AspNetCore.Mvc.Rendering.SelectList;
+    var users = ViewBag.Users as Microsoft.AspNetCore.Mvc.Rendering.SelectList;
+}
+<h2 class="text-center text-secondary"><i class="bi bi-list-check me-2"></i>Create Task</h2>
+<form method="post" class="card p-3">
+    <div class="mb-3">
+        <label class="form-label text-secondary fw-semibold small">
+            Title
+        </label>
+        <input asp-for="Title" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label text-secondary fw-semibold small"> 
+            Project
+        </label>
+        <select asp-for="ProjectId" asp-items="ViewBag.Projects"
+            class="form-select">
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label text-secondary fw-semibold small">
+            Assign To
+        </label>
+        <select asp-for="AssignedToUserId" asp-items="ViewBag.Users" class="form-select">
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label text-secondary fw-semibold small"> 
+            Deadline
+        </label>
+        <input asp-for="Deadline" type="date" class="form-control" value="@DateTime.Now.AddDays(30).ToString("yyyyy-MM-dd")"/>
+    </div>
+    <div class="mb-3"><label class="form-label text-secondary fw-semibold small">Priority</label>
+        <select asp-for="Priority" class="form-select">
+            <option>Low</option>
+            <option selected>Medium</option>
+            <option>High</option>
+        </select> 
+    </div>
+    <div class="mb-3"><label class="form-label text-secondary fw-semibold small">Description</label><textarea asp-for="Description" class="form-control"></textarea></div>
+    <center>
+        <button class="btn btn-secondary" style="margin-bottom:20px;width:100px;" type = "submit">Create</button>
+        <a href="/Tasks" class="btn btn-danger" style="width:100px; margin-bottom:20px;">Cancel</a>
+    </center>
+</form>

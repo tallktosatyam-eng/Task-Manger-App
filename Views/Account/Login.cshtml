@@ -1,0 +1,41 @@
+@{
+    ViewData["Title"] = "Login";
+}
+<div class="row justify-content-center">
+    <div class="col-md-4 card p-4 mt-5">
+        <h3 class="text-center text-secondary">Login</h3>
+        <form method="post" asp-action="Login">
+            <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+            <div class="mb-3">
+                <label>Email</label>
+                <input name="email" class="form-control" required />
+            </div>
+            <div class="mb-3">
+                <label>Password</label>
+                <input name="password" type="password" class="form-control" required />
+            </div>
+            <div class="mb-3">
+                <p><a href="/Account/ForgotPassword" class="text-secondary text-decoration-none">Forgot Password?</a></p>
+            </div>
+            <button class="btn w-100 login-btn">Login</button>
+            @if (!ViewData.ModelState.IsValid) 
+            {
+                <div class="text-danger mt-2">Invalid credentials</div>
+            }
+        </form>
+    </div>
+</div>
+
+<style>
+    .login-btn {
+    background: linear-gradient(to right, #e8321c, #f5a623);
+    border: none;
+    color: white;
+    font-weight: 600;
+}
+
+.login-btn:hover {
+    background: linear-gradient(to right, #d21f0e, #ec980d);
+    color: white;
+}
+</style>    

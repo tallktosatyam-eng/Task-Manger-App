@@ -1,0 +1,64 @@
+@model IEnumerable<TaskManager.Models.Notification>
+@{
+    ViewData["Title"] = "Notifications";
+    var count = 1;
+}
+
+<h2 class="text-center text-secondary">
+    <i class="bi bi-bell"></i> Notifications
+</h2>
+
+<table class="table table-bordered table-hover align-middle table-striped modern-table">
+    <thead class="table-dark">
+        <tr>
+            <th class="border border-2 text-center">Sr.No</th>
+            <th class="border border-2 text-center">Message</th>
+            <th class="border border-2 text-center">When</th>
+            <th class="border border-2 text-center">Read</th>
+        </tr>
+    </thead>
+
+    <tbody>
+@foreach (var n in Model)
+{
+    <tr class="notification-row @(n.IsRead ? "" : "table-warning")"
+        data-id="@n.Id"
+        style="cursor:@(n.IsRead ? "default" : "pointer")">
+
+        <td class="text-center">@count</td>
+        <td class="text-center">@n.Message</td>
+        <td class="text-center">@n.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</td>
+        <td class="text-center">@((n.IsRead) ? "Yes" : "No")</td>
+    </tr>
+
+    count++;
+}
+    </tbody>
+</table>
+
+<!-- Hidden Form -->
+<form id="markReadForm" method="post" asp-action="MarkReadQuick" style="display:none;">
+    <input type="hidden" name="id" id="notifId" />
+</form>
+
+@section Scripts {
+<script>
+    document.querySelectorAll(".notification-row.table-warning").forEach(row => {
+        row.addEventListener("click", function () {
+
+            let id = this.getAttribute("data-id");
+
+            // Put ID into hidden form
+            document.getElementById("notifId").value = id;
+
+            // Submit form to mark as read
+            document.getElementById("markReadForm").submit();
+
+            // OPTIONAL: redirect to tasks AFTER marking read
+            setTimeout(() => {
+                window.location.href = "/Tasks";
+            }, 100);
+        });
+    });
+</script>
+}

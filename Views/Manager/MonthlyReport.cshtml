@@ -1,0 +1,97 @@
+@model IEnumerable<TaskManager.Models.TaskItem>
+
+@{
+    ViewData["Title"] = "Monthly Task Summary";
+
+    int selectedMonth = int.TryParse(Context.Request.Query["month"], out var month) ? month : 0;
+
+    int selectedYear = int.TryParse(Context.Request.Query["year"], out var year) ? year : DateTime.Now.Year;
+}
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success">@TempData["Message"]</div>
+}
+
+<h2 class="mb-4 text-center text-secondary">
+    <i class="bi bi-calendar3"></i> Monthly Task Summary
+</h2>
+
+<form method="get" class="row g-3 mb-4">
+
+    <!-- MONTH -->
+    <div class="col-md-3">
+        <label class="form-label fw-bold">Select Month</label>
+        <select name="month" class="form-select">
+            <option value="">All Months</option>
+            @for (int i = 1; i <= 12; i++)
+            {
+                <option value="@i" selected="@(i == selectedMonth)">
+                    @System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(i)
+                </option>
+            }
+        </select>
+    </div>
+
+    <!-- YEAR -->
+    <div class="col-md-3">
+        <label class="form-label fw-bold">Select Year</label>
+        <select name="year" class="form-select">
+            @for (int y = DateTime.Now.Year - 5; y <= DateTime.Now.Year + 1; y++)
+            {
+                <option value="@y" selected="@(y == selectedYear)">
+                    @y
+                </option>
+            }
+        </select>
+    </div>
+
+    <!-- BUTTON -->
+    <div class="col-md-3 align-self-end">
+        <button class="btn btn-secondary w-100">
+            <i class="bi bi-funnel"></i> Filter
+        </button>
+    </div>
+
+</form>
+
+<table class="table table-hover table-bordered align-middle">
+    <thead class="table-dark">
+        <tr>
+            <th>Task</th>
+            <th>Project</th>
+            <th>Status</th>
+            <th>Deadline</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (!Model.Any())
+        {
+            <tr>
+                <td colspan="4" class="text-center text-muted">
+                    No tasks found for selected month/year
+                </td>
+            </tr>
+        }
+        else
+        {
+            @foreach (var t in Model)
+            {
+                <tr>
+                    <td>@t.Title</td>
+                    <td>@t.Project?.Name</td>
+                    <td>
+                        <span class="badge 
+                            @(t.Status == "Completed" ? "bg-success" :
+                              t.Status == "In Progress" ? "bg-warning text-dark" : "bg-danger")">
+                            @t.Status
+                        </span>
+                    </td>
+                    <td>
+                        @t.Deadline?.ToLocalTime().ToString("dd MMM yyyy")
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>

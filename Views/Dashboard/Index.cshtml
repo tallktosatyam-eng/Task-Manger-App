@@ -1,0 +1,221 @@
+@model TaskManager.Models.Project
+
+@{
+    ViewData["Title"] = "Dashboard";
+
+    var upcoming = ViewBag.Upcoming as List<TaskManager.Models.TaskItem>;
+    var count = 1;
+}
+
+<h2 class="text-center text-secondary mb-4">
+    <i class="bi bi-speedometer2 me-2"></i> Dashboard
+</h2>
+
+<!-- ==================== STAT CARDS ===================== -->
+<div class="row mb-4 text-center">
+
+    <div class="col-md-3 ">
+        <a href="/Projects" class="text-decoration-none text-secondary ">
+            <div class="card stats-card shadow-lg border border-primary">
+                <i class="bi bi-bar-chart-fill stats-icon text-primary"></i>
+                <h6 style="margin-top:7px;margin-bottom:0px">Total Projects</h6>
+                <h2 class="fw-bold text-primary">@ViewBag.TotalProjects</h2>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-md-3">
+        <a href="/Tasks" class="text-decoration-none text-secondary">
+            <div class="card stats-card shadow-lg border border-info">
+                <i class="bi bi-list-task stats-icon text-info "></i>
+                <h6 style="margin-top:7px;margin-bottom:0px">Total Tasks</h6>
+                <h2 class="fw-bold text-info">@ViewBag.Total</h2>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-md-3">
+        <a href="/Dashboard/CompletedTask" class="text-decoration-none text-secondary">
+        <div class="card stats-card shadow-lg border border-success">
+            <i class="bi bi-check-circle-fill stats-icon text-success"></i>
+            <h6 style="margin-top:7px;margin-bottom:0px">Completed Tasks</h6>
+            <h2 class="fw-bold text-success">@ViewBag.Completed</h2>
+        </div>
+        </a>
+    </div>
+
+    <div class="col-md-3">
+        <a href="/Dashboard/OverdueTask" class="text-decoration-none text-secondary">
+        <div class="card stats-card shadow-lg border border-danger">
+            <i class="bi bi-exclamation-triangle-fill stats-icon text-danger"></i>
+            <h6 style="margin-top:7px;margin-bottom:0px">Overdue</h6>
+            <h2 class="fw-bold text-danger">@ViewBag.Overdue</h2>
+        </div>
+        </a>
+    </div>
+
+</div>
+
+
+<!-- ==================== UPCOMING DEADLINES ===================== -->
+<h4 class="mt-4 mb-3 text-secondary">
+    <i class="bi bi-clock-history me-2 text-warning "></i> Upcoming Deadlines
+</h4>
+<h5 class="text-center">Tasks</h5>
+
+@if (upcoming != null && upcoming.Count > 0)
+{
+    <div class="table-responsive">
+        <table id="myTable" class="table table-bordered table-hover align-middle table-striped modern-table">
+            <thead class="table-dark">
+                <tr>
+                    <th class="border border-2 text-center">Sr.No</th>
+                    <th class="border border-2 text-center">Task</th>
+                    <th class="border border-2 text-center">Project</th>
+                    <th class="border border-2 text-center">Deadline</th>
+                    <th class="border border-2 text-center">Status</th>
+                    <th class="border border-2 text-center">Progress</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var t in upcoming)
+                {
+                    <tr>
+                        <td class="text-center"><strong>@count</strong></td>
+
+                        <td class="text-center">@t.Title</td>
+
+                        <td class="text-center">
+                            <span class="badge text-primary px-2 py-1">
+                                @t.Project?.Name
+                            </span>
+                        </td>
+
+                        <td class="text-center">
+                            <span class="badge text-dark">
+                                @t.Deadline?.ToLocalTime().ToString("dd MMM yyyy")
+                            </span>
+                        </td>
+
+                        <td class="text-center">
+                            @if (t.Status == "Completed")
+                            {
+                                <span class="badge bg-success px-3 py-2">Completed</span>
+                            }
+                            else if (t.Status == "In Progress")
+                            {
+                                <span class="badge bg-warning text-dark px-3 py-2">In Progress</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger px-3 py-2">Not Started</span>
+                            }
+                        </td>
+
+                        <td class="text-center">
+                            <div class="progress border border-dark" style="height: 20px;">
+                                <div class="progress-bar 
+                                    @(t.Progress == 100 ? "bg-success" :
+                                      t.Progress >= 50 ? "bg-info" :
+                                      t.Progress >= 20 ? "bg-warning" : "bg-danger")"
+                                     style="width:@t.Progress%">
+                                    @t.Progress%
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+
+                    count++;
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <div class="alert alert-warning mt-3">
+        No upcoming tasks.
+    </div>
+}
+
+<!-- ==================== ANALYTICS CHARTS ===================== -->
+
+<h3 class="mt-5 text-secondary">
+    <i class="bi bi-graph-up-arrow me-2"></i> Visual Analytics
+</h3>
+
+<div class="row d-flex justify-content-center mt-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm p-3 text-center">
+            <h5 class="text-center text-success">Task Status Overview</h5>
+            <canvas id="taskChart" height="250"></canvas>
+        </div>
+    </div>
+
+</div>
+    
+<!-- ==================== SCRIPTS ===================== -->
+@section Scripts {
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+
+        // ---------- BAR CHART (Task Status) ----------
+        new Chart(document.getElementById('taskChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Completed', 'In Progress', 'Not Started','Over Due'],
+                datasets: [{
+                    label: 'Tasks',
+                    data: [
+                        @ViewBag.Completed,
+                        @ViewBag.InProgress,
+                        @ViewBag.NotStarted,
+                        @ViewBag.Overdue1
+                    ],
+                    backgroundColor: ['#1cc88a', '#f6c23e', '#e74a3b','#FFA500'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+
+        // DataTable initialization
+        $(document).ready(function () {
+            $('#myTable').DataTable({ paging: true, lengthChange: false });
+        });
+    </script>
+}
+
+<!-- ==================== STYLES ===================== -->
+<style>
+    .stats-card {
+        padding: 30px 0;
+        border-radius: 15px;
+        transition: 0.3s;
+        border: 1px solid #ddd;
+        background: linear-gradient(to top right, #ffffff, #f8f8f8);
+    }
+
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0px 12px 25px rgba(0, 0, 0, 0.18);
+    }
+
+    .date-badge {
+        background: #f6f7f8;
+        border: 1px solid #ddd;
+    }
+
+    .modern-table tbody tr:hover {
+        background-color: rgba(232, 232, 232, 0.7);
+        cursor: pointer;
+    }
+</style>
